@@ -9,14 +9,38 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		LICENSE = LICENSE
 		docs\Scrum\Scrum.md = docs\Scrum\Scrum.md
 		docs\STRUCTURE.md = docs\STRUCTURE.md
+		tests\Uncertainty.Core.Tests\Uncertainty.Core.Tests.csproj = tests\Uncertainty.Core.Tests\Uncertainty.Core.Tests.csproj
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uncertainty.Core.Examples", "examples\Uncertainty.Core.Examples\Uncertainty.Core.Examples.csproj", "{19B902B4-F3B7-4B43-8556-4451DAFF38F6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uncertainty.Core", "src\Uncertainty.Core\Uncertainty.Core.csproj", "{B9D0FD68-7F90-C35C-9F05-25F2A2E4C332}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uncertainty.Core.Tests", "tests\Uncertainty.Core.Tests\Uncertainty.Core.Tests.csproj", "{CC1439B7-4E91-35E7-FF3A-CA342AF8680C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{19B902B4-F3B7-4B43-8556-4451DAFF38F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19B902B4-F3B7-4B43-8556-4451DAFF38F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19B902B4-F3B7-4B43-8556-4451DAFF38F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19B902B4-F3B7-4B43-8556-4451DAFF38F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9D0FD68-7F90-C35C-9F05-25F2A2E4C332}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9D0FD68-7F90-C35C-9F05-25F2A2E4C332}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9D0FD68-7F90-C35C-9F05-25F2A2E4C332}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9D0FD68-7F90-C35C-9F05-25F2A2E4C332}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC1439B7-4E91-35E7-FF3A-CA342AF8680C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC1439B7-4E91-35E7-FF3A-CA342AF8680C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC1439B7-4E91-35E7-FF3A-CA342AF8680C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC1439B7-4E91-35E7-FF3A-CA342AF8680C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DA20A16D-F43C-4947-9619-18E5B3B47B46}
 	EndGlobalSection
 EndGlobal
