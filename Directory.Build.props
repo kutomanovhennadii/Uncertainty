@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <PropertyGroup>
     <!-- Включаем строгую работу с null -->
     <Nullable>enable</Nullable>
@@ -17,5 +17,9 @@
 
     <!-- Отключаем авто-генерацию XML-доков (включим позже при релизе) -->
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <!-- Включаем встроенные анализаторы -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
   </PropertyGroup>
 </Project>
