@@ -1,0 +1,21 @@
+﻿<Project>
+  <PropertyGroup>
+    <!-- Включаем строгую работу с null -->
+    <Nullable>enable</Nullable>
+
+    <!-- Все предупреждения превращаются в ошибки (управляемо) -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- Единая версия языка -->
+    <LangVersion>latest</LangVersion>
+
+    <!-- Единый уровень анализаторов -->
+    <AnalysisLevel>latest</AnalysisLevel>
+
+    <!-- Детерминированные сборки -->
+    <Deterministic>true</Deterministic>
+
+    <!-- Отключаем авто-генерацию XML-доков (включим позже при релизе) -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>

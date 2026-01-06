@@ -1,2 +1,6 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿using Uncertainty.Core;
+
+Console.WriteLine("Uncertainty.Core example is running.");
+
+
+Console.WriteLine("Example finished.");
