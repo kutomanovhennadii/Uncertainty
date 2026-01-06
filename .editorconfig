@@ -1,0 +1,31 @@
+﻿root = true
+
+# ---------- Общие настройки ----------
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+
+# ---------- C# настройки ----------
+[*.cs]
+# Явное указание уровня языка
+dotnet_style_require_accessibility_modifiers = always:suggestion
+
+# Стиль var
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+dotnet_style_prefer_var_when_type_is_apparent = true:suggestion
+dotnet_style_prefer_var_when_type_is_not_apparent = false:suggestion
+
+# Стиль using
+dotnet_sort_system_directives_first = true
+
+# Скобки и блоки
+csharp_prefer_braces = true:suggestion
+
+# Порядок модификаторов
+csharp_preferred_modifier_order = public, private, protected, internal, static, extern, new, virtual, abstract, sealed, override, readonly, unsafe, volatile, async:silent
