@@ -1,4 +1,4 @@
-﻿root = true
+root = true
 
 # ---------- Общие настройки ----------
 [*]
@@ -23,6 +23,14 @@ dotnet_style_prefer_var_when_type_is_not_apparent = false:suggestion
 
 # Стиль using
 dotnet_sort_system_directives_first = true
+
+# Отключаем правило Не передавайте строковые литералы в Console.WriteLine
+dotnet_diagnostic.CA1303.severity = none
+
+# Отключаем правило Тип в тестовом проекте может быть internal
+dotnet_diagnostic.CA1515.severity = none
+
+
 
 # Скобки и блоки
 csharp_prefer_braces = true:suggestion
