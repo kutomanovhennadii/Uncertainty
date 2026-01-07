@@ -4,6 +4,21 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <IsPackable>true</IsPackable>
+
+    <PackageId>Uncertainty.Core</PackageId>
+    <VersionPrefix>0.1.0</VersionPrefix>
+
+    <Authors>Hennadii Kutomanov</Authors>
+    <Company></Company>
+
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/kutomanovhennadii/Uncertainty</RepositoryUrl>
+    <Description>Core library for uncertainty-aware numeric types and basic Gaussian error propagation.</Description>
+    <PackageTags>uncertainty;error-propagation;gaussian;math;numeric</PackageTags>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+
   </PropertyGroup>
 
 </Project>
