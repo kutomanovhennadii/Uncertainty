@@ -67,13 +67,13 @@ public static UDouble FromFloat(float x)
 
 -------------------------------------------------------------------------------
 
-## 4. Имплицитные преобразования
+## 4. Эксплицитные преобразования
 
 Тип поддерживает неявные преобразования:
 
-UDouble x = 5;
-UDouble a = 3.14;
-UDouble b = 5f;
+UDouble x = (UDouble)5;
+UDouble a = (UDouble)3.14;
+UDouble b = (UDouble)5f;
 
 Семантика:
 - используется FromDouble или FromFloat
@@ -129,7 +129,7 @@ FromMeanVar(mean, variance)   | Прямое создание                   
 FromMeanStd(mean, stdDev)     | Альтернативная форма ввода               | stdDev^2
 FromDouble(x)                 | Учитывает машинную ошибку double         | (0.5 * ulp(x))^2
 FromFloat(x)                  | Учитывает машинную ошибку float          | (0.5 * ulp(x))^2
-Implicit int/float/double     | То же, что соответствующая фабрика       | см. выше
+Explicite int/float/double    | То же, что соответствующая фабрика       | см. выше
 FromData(IEnumerable<T>)      | Статистика + погрешность инструмента     | variance_stat + variance_inst
 
 -------------------------------------------------------------------------------

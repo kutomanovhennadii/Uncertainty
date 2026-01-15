@@ -70,9 +70,45 @@
 - тесты покрывают все случаи  
 
 ### Tasks
-- реализовать базовые фабрики  
-- реализовать фабрики с учётом ошибок округления  
-- написать тесты  
+Tasks (исправленные под контракт)
+T3.2.1 — Implement FromMeanVar
+Реализовать базовую фабрику без скрытой логики.
+Проверки: variance >= 0, finite.
+T3.2.2 — Implement FromMeanStd
+stdDev² → variance.
+Проверки: stdDev ≥ 0, finite.
+T3.2.3 — Implement FromDouble (with IEEE-754 rounding model)
+вычислить ulp(x) через экспоненту double
+variance = (0.5 * ulp(x))²
+запрет NaN / ∞
+T3.2.4 — Implement FromFloat (аналогично double)
+ulp для float
+variance = (0.5 * ulp(x))²
+T3.2.5 — Implement explicit conversions
+explicit operator UDouble(double x) → FromDouble(x)
+explicit operator UDouble(float x) → FromFloat(x)
+explicit operator UDouble(int x) → преобразовать x → double → FromDouble(x)
+T3.2.6 — Implement FromData(IEnumerable<T>)
+Шаги:
+привести каждый элемент к UDouble
+mean = average(Means)
+sigma²_stat = Σ (Meanᵢ – mean)² / (n – 1)
+variance_stat = sigma²_stat / n
+variance_inst = average(Varianceᵢ)
+variance_total = variance_stat + variance_inst
+return FromMeanVar(mean, variance_total)
+T3.2.7 — Full XML documentation
+Документация для всех фабрик, включая explicit conversions.
+T3.2.8 — Write tests
+На каждый кейс:
+корректные значения
+ulp-соответствие
+NaN/∞ → исключения
+FromData:
+одинаковые точки
+разные точки
+разные дисперсии
+смешанные типы (int, float, double, UDouble) 
 
 ---
 
