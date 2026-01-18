@@ -380,5 +380,137 @@ namespace Uncertainty.Core
             => !left.Equals(right);
         #endregion
 
+        #region Operators
+        /// <summary>
+        /// Adds two uncertain values using linear error propagation.
+        /// </summary>
+        /// <param name="a">First operand.</param>
+        /// <param name="b">Second operand.</param>
+        /// <returns>
+        /// New <see cref="UDouble"/> with:
+        /// Mean = a.Mean + b.Mean,
+        /// Variance = a.Variance + b.Variance.
+        /// </returns>
+        /// <remarks>
+        /// Errors are assumed independent.
+        /// No saturation or special-case handling is applied.
+        /// </remarks>
+        public static UDouble Add(UDouble a, UDouble b)
+        {
+            return UDouble.FromMeanVar(
+                a.Mean + b.Mean,
+                a.Variance + b.Variance
+            );
+        }
+
+        /// <summary>
+        /// Subtracts two uncertain values using linear error propagation.
+        /// </summary>
+        /// <param name="a">Left operand.</param>
+        /// <param name="b">Right operand.</param>
+        /// <returns>
+        /// New <see cref="UDouble"/> with:
+        /// Mean = a.Mean - b.Mean,
+        /// Variance = a.Variance + b.Variance.
+        /// </returns>
+        /// <remarks>
+        /// Errors are assumed independent.
+        /// No saturation or special-case handling is applied.
+        /// </remarks>
+        public static UDouble Subtract(UDouble a, UDouble b)
+        {
+            return UDouble.FromMeanVar(
+                a.Mean - b.Mean,
+                a.Variance + b.Variance
+            );
+        }
+
+        /// <summary>
+        /// Adds two uncertain values.
+        /// </summary>
+        public static UDouble operator +(UDouble a, UDouble b)
+            => Add(a, b);
+
+        /// <summary>
+        /// Subtracts two uncertain values.
+        /// </summary>
+        public static UDouble operator -(UDouble a, UDouble b)
+            => Subtract(a, b);
+
+        /// <summary>
+        /// Multiplies two uncertain values using linear error propagation.
+        /// </summary>
+        /// <param name="a">First operand.</param>
+        /// <param name="b">Second operand.</param>
+        /// <returns>
+        /// New <see cref="UDouble"/> with:
+        /// Mean = a.Mean * b.Mean,
+        /// Variance = b.Mean² * a.Variance + a.Mean² * b.Variance.
+        /// </returns>
+        /// <remarks>
+        /// Errors are assumed independent.
+        /// Overflow in Mean or Variance is allowed and results in ±Infinity,
+        /// following standard double semantics. No saturation is applied here.
+        /// </remarks>
+        public static UDouble Multiply(UDouble a, UDouble b)
+        {
+            double mean = a.Mean * b.Mean;
+
+            double variance =
+                b.Mean * b.Mean * a.Variance +
+                a.Mean * a.Mean * b.Variance;
+
+            return UDouble.FromMeanVar(mean, variance);
+        }
+
+        /// <summary>
+        /// Multiplies two uncertain values.
+        /// </summary>
+        public static UDouble operator *(UDouble a, UDouble b)
+            => Multiply(a, b);
+
+        /// <summary>
+        /// Divides two uncertain values using linear error propagation.
+        /// </summary>
+        /// <param name="a">Numerator.</param>
+        /// <param name="b">Denominator.</param>
+        /// <returns>
+        /// New <see cref="UDouble"/> with:
+        /// Mean = a.Mean / b.Mean,
+        /// Variance = a.Variance / b.Mean² + a.Mean² * b.Variance / b.Mean⁴,
+        /// with variance saturated by <see cref="VarianceSaturationPolicy"/>.
+        /// </returns>
+        /// <remarks>
+        /// Errors are assumed independent. If <paramref name="b"/> has zero mean,
+        /// division is undefined and <see cref="DivideByZeroException"/> is thrown.
+        /// </remarks>
+        public static UDouble Divide(UDouble a, UDouble b)
+        {
+            if (b.Mean == 0.0)
+                throw new DivideByZeroException();
+
+            double mean = a.Mean / b.Mean;
+
+            double b2 = b.Mean * b.Mean;
+            double b4 = b2 * b2;
+
+            double variance =
+                a.Variance / b2 +
+                (a.Mean * a.Mean * b.Variance) / b4;
+
+            variance = VarianceSaturationPolicy.SaturateVariance(mean, variance);
+
+            return UDouble.FromMeanVar(mean, variance);
+        }
+
+        /// <summary>
+        /// Divides two uncertain values.
+        /// </summary>
+        public static UDouble operator /(UDouble a, UDouble b)
+            => Divide(a, b);
+
+
+        #endregion
+
     }
 }
