@@ -1,8 +1,9 @@
 using System.Numerics;
+using System.Globalization;
 
 namespace Uncertainty.Core
 {
-    public readonly struct UDouble : IEquatable<UDouble>
+    public readonly struct UDouble : IEquatable<UDouble>, IFormattable
     {
         #region Properties
         /// <summary>
@@ -40,8 +41,11 @@ namespace Uncertainty.Core
             if (double.IsNaN(mean) || double.IsInfinity(mean))
                 throw new ArgumentException("Mean must be finite.", nameof(mean));
 
-            if (double.IsNaN(variance) || double.IsInfinity(variance) || variance < 0)
-                throw new ArgumentException("Variance must be finite and ≥ 0.", nameof(variance));
+            if (double.IsNaN(variance) || double.IsInfinity(variance))
+                throw new ArgumentException("Variance must be finite.", nameof(variance));
+
+            if (variance < 0)
+                throw new ArgumentOutOfRangeException(nameof(variance), "Variance must be ≥ 0.");
 
             Mean = mean;
             Variance = variance;
@@ -65,8 +69,11 @@ namespace Uncertainty.Core
             if (double.IsNaN(mean) || double.IsInfinity(mean))
                 throw new ArgumentException("Mean must be finite.", nameof(mean));
 
-            if (double.IsNaN(variance) || double.IsInfinity(variance) || variance < 0)
-                throw new ArgumentException("Variance must be finite and ≥ 0.", nameof(variance));
+            if (double.IsNaN(variance) || double.IsInfinity(variance))
+                throw new ArgumentException("Variance must be finite.", nameof(variance));
+
+            if (variance < 0)
+                throw new ArgumentOutOfRangeException(nameof(variance), "Variance must be ≥ 0.");
 
             return new UDouble(mean, variance);
         }
@@ -88,8 +95,11 @@ namespace Uncertainty.Core
             if (double.IsNaN(mean) || double.IsInfinity(mean))
                 throw new ArgumentException("Mean must be finite.", nameof(mean));
 
-            if (double.IsNaN(stdDev) || double.IsInfinity(stdDev) || stdDev < 0)
-                throw new ArgumentException("Standard deviation must be finite and ≥ 0.", nameof(stdDev));
+            if (double.IsNaN(stdDev) || double.IsInfinity(stdDev))
+                throw new ArgumentException("Standard deviation must be finite.", nameof(stdDev));
+
+            if (stdDev < 0)
+                throw new ArgumentOutOfRangeException(nameof(stdDev), "Standard deviation must be ≥ 0.");
 
             return FromMeanVar(mean, stdDev * stdDev);
         }
@@ -100,13 +110,13 @@ namespace Uncertainty.Core
         /// </summary>
         /// <param name="x">The input double value. Must be finite.</param>
         /// <returns>A new <see cref="UDouble"/> instance with mean <paramref name="x"/>.</returns>
-        /// <exception cref="ArgumentOutOfRangeException">
+        /// <exception cref="ArgumentException">
         /// Thrown when <paramref name="x"/> is NaN or infinite.
         /// </exception>
         public static UDouble FromDouble(double x)
         {
             if (double.IsNaN(x) || double.IsInfinity(x))
-                throw new ArgumentOutOfRangeException(nameof(x), "Value must be finite.");
+                throw new ArgumentException("Value must be finite.", nameof(x));
 
             // IEEE-754: ulp(x) = 2^(e - 52) for normal numbers, where e is the unbiased exponent.
             // For subnormals, ulp is constant: 2^-1074.
@@ -144,13 +154,13 @@ namespace Uncertainty.Core
         /// </summary>
         /// <param name="x">The input float value. Must be finite.</param>
         /// <returns>A new <see cref="UDouble"/> instance with mean equal to <paramref name="x"/>.</returns>
-        /// <exception cref="ArgumentOutOfRangeException">
+        /// <exception cref="ArgumentException">
         /// Thrown when <paramref name="x"/> is NaN or infinite.
         /// </exception>
         public static UDouble FromFloat(float x)
         {
             if (float.IsNaN(x) || float.IsInfinity(x))
-                throw new ArgumentOutOfRangeException(nameof(x), "Value must be finite.");
+                throw new ArgumentException("Value must be finite.", nameof(x));
 
             // IEEE-754 float: ulp(x) = 2^(e - 23) for normal numbers, where e is the unbiased exponent.
             // For subnormals (including 0), ulp is constant: 2^-149.
@@ -238,6 +248,11 @@ namespace Uncertainty.Core
 #pragma warning restore CA2225
 
         /// <summary>
+        /// A <see cref="UDouble"/> representing zero with zero uncertainty.
+        /// </summary>
+        public static readonly UDouble Zero = FromMeanVar(0.0, 0.0);
+
+        /// <summary>
         /// Creates a <see cref="UDouble"/> from a dataset of <see cref="UDouble"/> samples,
         /// combining statistical uncertainty of the mean with the average instrumental uncertainty.
         /// </summary>
@@ -262,26 +277,28 @@ namespace Uncertainty.Core
         {
             ArgumentNullException.ThrowIfNull(data);
 
-            var samples = data as IList<UDouble> ?? data.ToList();
-            int n = samples.Count;
-            if (n == 0) throw new ArgumentException("Data must contain at least one element.", nameof(data));
+            double mean = 0.0;
+            double M2 = 0.0;
+            double sumVarianceInst = 0.0;
+            int n = 0;
 
-            double mean = samples.Average(s => s.Mean);
-            double varianceInst = samples.Average(s => s.Variance);
-
-            double sigma2Stat = 0.0;
-            if (n > 1)
+            foreach (var s in data)
             {
-                double sumSq = 0.0;
-                for (int i = 0; i < n; i++)
-                {
-                    double d = samples[i].Mean - mean;
-                    sumSq += d * d;
-                }
-                sigma2Stat = sumSq / (n - 1);
+                n++;
+                double delta = s.Mean - mean;
+                mean += delta / n;
+                double delta2 = s.Mean - mean;
+                M2 += delta * delta2;
+
+                sumVarianceInst += s.Variance;
             }
 
+            if (n == 0) throw new ArgumentException("Data must contain at least one element.", nameof(data));
+
+            double sigma2Stat = n > 1 ? M2 / (n - 1) : 0.0;
             double varianceStat = sigma2Stat / n;
+            double varianceInst = sumVarianceInst / n;
+
             return FromMeanVar(mean, varianceStat + varianceInst);
         }
 
@@ -314,30 +331,28 @@ namespace Uncertainty.Core
         {
             ArgumentNullException.ThrowIfNull(data);
 
-            var list = data as IList<T> ?? data.ToList();
-            int n = list.Count;
-            if (n == 0) throw new ArgumentException("Data must contain at least one element.", nameof(data));
+            double mean = 0.0;
+            double M2 = 0.0;
+            double sumVarianceInst = 0.0;
+            int n = 0;
 
-            var samples = new UDouble[n];
-            for (int i = 0; i < n; i++)
-                samples[i] = FromNumber(list[i]);
-
-            double mean = samples.Average(s => s.Mean);
-            double varianceInst = samples.Average(s => s.Variance);
-
-            double sigma2Stat = 0.0;
-            if (n > 1)
+            foreach (var item in data)
             {
-                double sumSq = 0.0;
-                for (int i = 0; i < n; i++)
-                {
-                    double d = samples[i].Mean - mean;
-                    sumSq += d * d;
-                }
-                sigma2Stat = sumSq / (n - 1);
+                var s = FromNumber(item);
+                n++;
+                double delta = s.Mean - mean;
+                mean += delta / n;
+                double delta2 = s.Mean - mean;
+                M2 += delta * delta2;
+                sumVarianceInst += s.Variance;
             }
 
+            if (n == 0) throw new ArgumentException("Data must contain at least one element.", nameof(data));
+
+            double sigma2Stat = n > 1 ? M2 / (n - 1) : 0.0;
             double varianceStat = sigma2Stat / n;
+            double varianceInst = sumVarianceInst / n;
+
             return FromMeanVar(mean, varianceStat + varianceInst);
         }
         #endregion
@@ -380,6 +395,23 @@ namespace Uncertainty.Core
             => !left.Equals(right);
         #endregion
 
+        #region Formatting
+        /// <summary>
+        /// Returns a string in the form "mean ± stddev" using the specified format.
+        /// Implements <see cref="IFormattable"/>.
+        /// </summary>
+        public override string ToString()
+            => ToString(null, CultureInfo.CurrentCulture);
+
+        public string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            string fmt = format ?? "G";
+            var meanStr = Mean.ToString(fmt, formatProvider);
+            var stdStr = StdDev.ToString(fmt, formatProvider);
+            return $"{meanStr} ± {stdStr}";
+        }
+        #endregion
+
         #region Operators
         /// <summary>
         /// Adds two uncertain values using linear error propagation.
@@ -395,12 +427,20 @@ namespace Uncertainty.Core
         /// Errors are assumed independent.
         /// No saturation or special-case handling is applied.
         /// </remarks>
+        /// <summary>
+        /// Tolerance used to treat small denominators as zero in division operations.
+        /// Default is 0.0, which preserves exact behavior (<c>b.Mean == 0.0</c>).
+        /// Set to a positive value to consider values with <c>|mean| &lt;= DivisionTolerance</c> as zero.
+        /// </summary>
+        public static double DivisionTolerance { get; set; }
+
         public static UDouble Add(UDouble a, UDouble b)
         {
-            return UDouble.FromMeanVar(
-                a.Mean + b.Mean,
-                a.Variance + b.Variance
-            );
+            double mean = a.Mean + b.Mean;
+            double variance = a.Variance + b.Variance;
+            variance = VarianceSaturationPolicy.SaturateVariance(mean, variance);
+
+            return UDouble.FromMeanVar(mean, variance);
         }
 
         /// <summary>
@@ -419,10 +459,11 @@ namespace Uncertainty.Core
         /// </remarks>
         public static UDouble Subtract(UDouble a, UDouble b)
         {
-            return UDouble.FromMeanVar(
-                a.Mean - b.Mean,
-                a.Variance + b.Variance
-            );
+            double mean = a.Mean - b.Mean;
+            double variance = a.Variance + b.Variance;
+            variance = VarianceSaturationPolicy.SaturateVariance(mean, variance);
+
+            return UDouble.FromMeanVar(mean, variance);
         }
 
         /// <summary>
@@ -460,6 +501,8 @@ namespace Uncertainty.Core
                 b.Mean * b.Mean * a.Variance +
                 a.Mean * a.Mean * b.Variance;
 
+            variance = VarianceSaturationPolicy.SaturateVariance(mean, variance);
+
             return UDouble.FromMeanVar(mean, variance);
         }
 
@@ -486,8 +529,8 @@ namespace Uncertainty.Core
         /// </remarks>
         public static UDouble Divide(UDouble a, UDouble b)
         {
-            if (b.Mean == 0.0)
-                throw new DivideByZeroException();
+            if (Math.Abs(b.Mean) <= DivisionTolerance)
+                throw new DivideByZeroException("Denominator mean is too close to zero.");
 
             double mean = a.Mean / b.Mean;
 
