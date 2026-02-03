@@ -26,6 +26,23 @@ Epic 3 — Core Implementation
 корректные фабрики FromDoubleWithRounding / FromFloatWithRounding (как ты сформулировал)
 понятные исключения/поведение на краях (0, отрицательное под Sqrt, домены для Acos/Asin/Ln и т.п.)
 
+Epic 3a — Реорганизация политик
+Цель: единый публичный фасад UncertaintyPolicies и internal-структура для остальных политик.
+Статус: анализ завершён, конспект в приложении A эпика (см. [docs/Scrum/Epic3a.md](docs/Scrum/Epic3a.md)).
+
+Epic 3б — Контракт для ReturnInfinityMean
+Цель: решить архитектурный вопрос о допустимости ±Infinity в Mean для стратегии ReturnInfinityMean.
+Проблема: текущий контракт требует Mean быть конечным, но ReturnInfinityMean может вычислить a.Mean / b.Mean → ±Infinity.
+Два варианта решения:
+A) THROW: запретить использование ReturnInfinityMean когда результат был бы бесконечным, выбросить исключение
+B) ALLOW: изменить контракт UDouble, разрешить Mean = ±Infinity в конструкторе и фабриках, обновить операции и тесты
+Выходные артефакты:
+- Архитектурное решение (вариант A или B)
+- Обновлённый контракт в core-contract.md (если B)
+- Реализация в UDouble.cs и ReturnInfinityDivisionStrategy.cs (если B)
+- Документация в policies.md о поведении ReturnInfinityMean
+- Тесты на операции сравнения и арифметику с бесконечностями (если B)
+
 Epic 4 — Core Test Baseline
 Цель: превратить Core в стабильную основу, которую не страшно публиковать и наращивать.
 Выходные артефакты:

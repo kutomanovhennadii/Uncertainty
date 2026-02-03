@@ -1,31 +1,51 @@
 using System;
+using System.Threading;
+using Uncertainty.Core.Policies.DivisionPolicies;
+using DivisionStrategies = Uncertainty.Core.Policies.DivisionPolicies.DivisionStrategies;
+using Uncertainty.Core.Policies.VarianceSaturationPolicies;
 
 namespace Uncertainty.Core.Policies
 {
     /// <summary>
     /// Policies for numeric behavior in the Uncertainty.Core arithmetic operations.
+    /// 
+    /// Thread-safe singleton facade for managing global numeric policies. Safe to call from both
+    /// synchronous and asynchronous contexts without causing deadlocks or thread pool starvation.
+    /// Uses SemaphoreSlim for thread-safe synchronization.
     /// </summary>
     public static class UncertaintyPolicies
     {
+        #region Private Fields
         private static DivisionBehavior _divisionBehavior;
         private static IDivisionStrategy? _divisionStrategy;
+        private static VarianceSaturationOptions _varianceSaturation = VarianceSaturationOptions.Default;
+        private static readonly SemaphoreSlim _sync = new SemaphoreSlim(1, 1);
+        #endregion
 
+        #region Constructors
         static UncertaintyPolicies()
         {
             // Explicitly set defaults for clarity and to avoid relying on implicit language defaults.
             DivisionTolerance = 0.0;
             DivisionBehavior = DivisionBehavior.ThrowOnSmallDenominator;
         }
+        #endregion
 
+        #region Division Politics
         /// <summary>
         /// Tolerance used to treat small denominators as zero in division operations.
         /// Default is 0.0 to preserve exact behavior (<c>b.Mean == 0.0</c>).
         /// Use <see cref="SetDivisionTolerance(double)"/> to modify this value.
+        /// 
+        /// Safe to read from async contexts.
         /// </summary>
         public static double DivisionTolerance { get; private set; }
 
         /// <summary>
         /// Sets the division tolerance. Must be finite and &gt;= 0.
+        /// 
+        /// Thread-safe and safe to call from both sync and async contexts without deadlock risk.
+        /// If called from an async context, uses SemaphoreSlim internally for synchronization.
         /// </summary>
         public static void SetDivisionTolerance(double tolerance)
         {
@@ -33,80 +53,127 @@ namespace Uncertainty.Core.Policies
                 throw new ArgumentException("Division tolerance must be finite.", nameof(tolerance));
             if (tolerance < 0.0)
                 throw new ArgumentOutOfRangeException(nameof(tolerance), "Division tolerance must be ≥ 0.");
-            DivisionTolerance = tolerance;
+
+            _sync.Wait();
+            try
+            {
+                DivisionTolerance = tolerance;
+            }
+            finally
+            {
+                _sync.Release();
+            }
         }
 
         /// <summary>
         /// Specifies how division by a very small denominator should behave.
         /// Setting this will also update the <see cref="DivisionStrategy"/> to a default implementation.
+        /// 
+        /// Thread-safe and safe to call from both sync and async contexts without deadlock risk.
         /// </summary>
         public static DivisionBehavior DivisionBehavior
         {
             get => _divisionBehavior;
             set
             {
-                _divisionBehavior = value;
+                if (!Enum.IsDefined(value))
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Invalid DivisionBehavior value.");
 
-                // Map enum to default strategy implementations.
-                _divisionStrategy = value switch
+                _sync.Wait();
+                try
                 {
-                    DivisionBehavior.ThrowOnSmallDenominator => new ThrowingDivisionStrategy(),
-                    DivisionBehavior.SaturateVariance => new SaturatingDivisionStrategy(),
-                    DivisionBehavior.ReturnInfinityMean => new ReturnInfinityDivisionStrategy(),
-                    _ => new ThrowingDivisionStrategy()
-                };
+                    _divisionBehavior = value;
+
+                    // Map enum to default strategy implementations.
+                    _divisionStrategy = value switch
+                    {
+                        DivisionBehavior.ThrowOnSmallDenominator => new DivisionStrategies.ThrowingDivisionStrategy(),
+                        DivisionBehavior.SaturateVariance => new DivisionStrategies.SaturatingDivisionStrategy(),
+                        DivisionBehavior.ReturnInfinityMean => new DivisionStrategies.ReturnInfinityDivisionStrategy(),
+                        _ => new DivisionStrategies.ThrowingDivisionStrategy()
+                    };
+                }
+                finally
+                {
+                    _sync.Release();
+                }
             }
         }
 
         /// <summary>
         /// Division strategy used when a denominator is considered "small" according to <see cref="DivisionTolerance"/>.
-        /// Assigning a custom strategy updates the <see cref="DivisionBehavior"/> to a best-effort value for compatibility.
+        /// Internal property; users should configure division behavior via <see cref="DivisionBehavior"/> enum.
         /// </summary>
-        public static IDivisionStrategy DivisionStrategy
+        internal static IDivisionStrategy DivisionStrategy
         {
-            get => _divisionStrategy ??= new ThrowingDivisionStrategy();
-            internal set
+            get => _divisionStrategy ??= new DivisionStrategies.ThrowingDivisionStrategy();
+            set
             {
-                _divisionStrategy = value ?? throw new ArgumentNullException(nameof(value));
-
-                // Update enum for backward compatibility when possible.
-                switch (value)
+                ArgumentNullException.ThrowIfNull(value);
+                _sync.Wait();
+                try
                 {
-                    case ThrowingDivisionStrategy:
-                        _divisionBehavior = DivisionBehavior.ThrowOnSmallDenominator;
-                        break;
-                    case SaturatingDivisionStrategy:
-                        _divisionBehavior = DivisionBehavior.SaturateVariance;
-                        break;
-                    case ReturnInfinityDivisionStrategy:
-                        _divisionBehavior = DivisionBehavior.ReturnInfinityMean;
-                        break;
-                    default:
-                        _divisionBehavior = DivisionBehavior.SaturateVariance;
-                        break;
+                    _divisionStrategy = value;
+
+                    // Update enum for backward compatibility when possible using internal mapper.
+                    if (value is DivisionStrategies.IMappedDivisionBehavior mapper)
+                    {
+                        _divisionBehavior = mapper.MappedBehavior;
+                    }
+                }
+                finally
+                {
+                    _sync.Release();
                 }
             }
         }
-    }
+        #endregion
 
-    /// <summary>
-    /// Behavior choices for division where the denominator mean is near zero.
-    /// </summary>
-    public enum DivisionBehavior
-    {
+        #region Variance Saturation Politics
         /// <summary>
-        /// The current conservative behavior: treat denominators with |mean| ≤ DivisionTolerance as zero and throw.
+        /// Current variance saturation options used by the library.
+        /// 
+        /// Safe to read from async contexts.
         /// </summary>
-        ThrowOnSmallDenominator,
+        public static VarianceSaturationOptions VarianceSaturation
+        {
+            get
+            {
+                _sync.Wait();
+                try
+                {
+                    return _varianceSaturation;
+                }
+                finally
+                {
+                    _sync.Release();
+                }
+            }
+        }
 
         /// <summary>
-        /// Perform the division and then apply the variance saturation policy so that a finite UDouble is returned.
+        /// Configure variance saturation runtime options. Validates input before applying.
+        /// 
+        /// Thread-safe and safe to call from both sync and async contexts without deadlock risk.
+        /// Uses SemaphoreSlim for synchronization, compatible with async/await patterns.
         /// </summary>
-        SaturateVariance,
+        public static void ConfigureVarianceSaturation(VarianceSaturationOptions options)
+        {
+            if (options.Equals(default(VarianceSaturationOptions)))
+                throw new ArgumentException("Options must be provided.", nameof(options));
 
-        /// <summary>
-        /// Intended to return +/-Infinity as the mean when the denominator is very small.
-        /// </summary>
-        ReturnInfinityMean
+            options.EnsureValid();
+
+            _sync.Wait();
+            try
+            {
+                _varianceSaturation = options;
+            }
+            finally
+            {
+                _sync.Release();
+            }
+        }
+        #endregion
     }
 }

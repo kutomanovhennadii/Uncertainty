@@ -1,6 +1,7 @@
 using NUnit.Framework;
+using Uncertainty.Core.Policies.VarianceSaturationPolicies;
 
-namespace Uncertainty.Core.Tests
+namespace Uncertainty.Core.Tests.Policies
 {
     [TestFixture]
     public sealed class VarianceSaturationPolicyTests
@@ -20,7 +21,6 @@ namespace Uncertainty.Core.Tests
                 {
                     double result = VarianceSaturationPolicy.SaturateVariance(mean, variance);
 
-                    // Compute expected ceiling using the same logic as the policy
                     double relLimit;
                     double absMean = System.Math.Abs(mean);
                     if (double.IsFinite(absMean))

@@ -440,12 +440,6 @@ namespace Uncertainty.Core
         #endregion
 
         #region Operators
-        [Obsolete("Use Uncertainty.Core.Policies.UncertaintyPolicies.SetDivisionTolerance or read Uncertainty.Core.Policies.UncertaintyPolicies.DivisionTolerance", false)]
-        public static double DivisionTolerance
-        {
-            get => Uncertainty.Core.Policies.UncertaintyPolicies.DivisionTolerance;
-            set => Uncertainty.Core.Policies.UncertaintyPolicies.SetDivisionTolerance(value);
-        }
 
         /// <summary>
         /// Adds two uncertain values using linear error propagation.

@@ -115,9 +115,73 @@ a > b означает a.Mean > b.Mean
 
 -------------------------------------------------------------------------------
 
-## 8. Минимальный эталон типа
+## 8. Thread-Safety и асинхронные контексты
 
-Пример структуры (не является реализацией, а фиксирует форму):
+### 8.1 UDouble как тип значения
+
+Сам тип `UDouble` является `readonly struct` и полностью потокобезопасен:
+- неизменяемость гарантирует отсутствие race conditions при чтении
+- разные потоки могут читать один и тот же UDouble без синхронизации
+- не требуется лocking для использования UDouble в многопоточных или асинхронных контекстах
+
+### 8.2 Глобальные политики (UncertaintyPolicies)
+
+Класс `UncertaintyPolicies` управляет глобальными настройками численного поведения:
+- `DivisionTolerance` — порог для малых знаменателей
+- `DivisionBehavior` — выбор стратегии обработки деления на малое число
+- `VarianceSaturation` — опции насыщения дисперсии
+
+**Гарантии потокобезопасности:**
+- Все методы установки конфигурации используют `SemaphoreSlim` для синхронизации
+- Вызовы из async-кода безопасны по логике (deadlock не возникает), но остаются блокирующими
+- Конфигурация, как правило, выполняется один раз при инициализации; повторные изменения обычно не предполагаются
+- Чтение политик безопасно и не требует синхронизации
+
+**Пример использования в асинхронном контексте (с учетом кратковременной блокировки):**
+
+```csharp
+public async Task ProcessWithCustomPolicy()
+{
+    // Допустимо вызывать из асинхронного метода, но это синхронная секция
+    UncertaintyPolicies.SetDivisionTolerance(1e-100);
+    UncertaintyPolicies.DivisionBehavior = DivisionBehavior.SaturateVariance;
+    
+    var result = await DoAsyncWork(); // остальной async код
+    return result;
+}
+```
+
+**Почему SemaphoreSlim вместо lock:**
+- `SemaphoreSlim` удобнее для смешанного sync/async использования (без риска deadlock)
+- Блокирующая секция короткая и используется редко
+
+### 8.3 Рекомендации по использованию
+
+1. **Конфигурация один раз при инициализации:**
+   ```csharp
+   // В Program.cs или Startup
+   UncertaintyPolicies.SetDivisionTolerance(1e-100);
+   UncertaintyPolicies.DivisionBehavior = DivisionBehavior.SaturateVariance;
+   ```
+
+2. **Чтение политик в горячих путях:**
+   ```csharp
+   var behavior = UncertaintyPolicies.DivisionBehavior; // Fast read, no sync needed
+   ```
+
+3. **Изменение политик из асинхронного кода:**
+   ```csharp
+   public async Task ChangePolicy(DivisionBehavior newBehavior)
+   {
+    // Безопасно, но синхронно блокирует на короткое время
+       UncertaintyPolicies.DivisionBehavior = newBehavior;
+       await Task.Delay(100);
+   }
+   ```
+
+-------------------------------------------------------------------------------
+
+## 9. Минимальный эталон типа
 
 public readonly struct UDouble
 {
