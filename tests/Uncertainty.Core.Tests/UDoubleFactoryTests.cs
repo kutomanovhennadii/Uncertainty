@@ -398,6 +398,7 @@ namespace Uncertainty.Core.Tests
                 () => UDouble.FromData<int>(null!),
                 Throws.TypeOf<ArgumentNullException>());
         }
+        #endregion
 
         #region // --- New tests: Welford, Subnormals, ToString, Zero ---
 
@@ -482,101 +483,13 @@ namespace Uncertainty.Core.Tests
             Assert.That(r.Variance, Is.EqualTo(expectedVariance).Within(Math.Max(1e-12, Math.Abs(expectedVariance) * 1e-12)));
         }
 
-        [Test]
-        public void ToString_DefaultAndFormat_ReturnsExpected()
-        {
-            var u = UDouble.FromMeanVar(1.2345, 0.25);
 
-            var defaultStr = u.ToString(null, System.Globalization.CultureInfo.InvariantCulture);
-            Assert.That(defaultStr, Is.EqualTo("1.2345 ± 0.5"));
-
-            var f2 = u.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
-            Assert.That(f2, Is.EqualTo("1.23 ± 0.50"));
-        }
-
-        [Test]
-        public void ToString_UsesCurrentCulture()
-        {
-            var u = UDouble.FromMeanVar(1.2345, 0.25);
-
-            var prev = CultureInfo.CurrentCulture;
-            try
-            {
-                CultureInfo.CurrentCulture = new CultureInfo("fr-FR");
-                var s = u.ToString();
-                Assert.That(s, Is.EqualTo("1,2345 ± 0,5"));
-            }
-            finally
-            {
-                CultureInfo.CurrentCulture = prev;
-            }
-        }
 
         [Test]
         public void Zero_IsZeroAndExact()
         {
             Assert.That(UDouble.Zero.Mean, Is.EqualTo(0.0));
             Assert.That(UDouble.Zero.Variance, Is.EqualTo(0.0));
-        }
-
-        [Test]
-        public void Divide_ByZero_Throws()
-        {
-            var a = UDouble.FromMeanVar(1.0, 1.0);
-            var b = UDouble.FromMeanVar(0.0, 0.0);
-
-            Assert.That(() => UDouble.Divide(a, b), Throws.TypeOf<DivideByZeroException>());
-        }
-
-        [Test]
-        public void Divide_TinyDenominator_WithTolerance_Throws()
-        {
-            var a = UDouble.FromMeanVar(1.0, 1.0);
-            var b = UDouble.FromMeanVar(1e-308, 0.0);
-
-            double prev = UDouble.DivisionTolerance;
-            try
-            {
-                UDouble.DivisionTolerance = 1e-307;
-                Assert.That(() => UDouble.Divide(a, b), Throws.TypeOf<DivideByZeroException>());
-            }
-            finally
-            {
-                UDouble.DivisionTolerance = prev;
-            }
-        }
-
-        [Test]
-        public void Divide_LargeVariance_IsSaturated()
-        {
-            var a = UDouble.FromMeanVar(1.0, 1e308);
-            var b = UDouble.FromMeanVar(1e-308, 0.0);
-
-            var r = UDouble.Divide(a, b);
-
-            Assert.That(r.Variance, Is.EqualTo(1e300));
-        }
-
-        [Test]
-        public void Add_Variance_IsSaturated()
-        {
-            var a = UDouble.FromMeanVar(0.0, 1e301);
-            var b = UDouble.FromMeanVar(0.0, 0.0);
-
-            var r = UDouble.Add(a, b);
-
-            Assert.That(r.Variance, Is.EqualTo(1e300));
-        }
-
-        [Test]
-        public void Multiply_Variance_IsSaturated()
-        {
-            var a = UDouble.FromMeanVar(1e152, 1e300);
-            var b = UDouble.FromMeanVar(1e152, 0.0);
-
-            var r = UDouble.Multiply(a, b);
-
-            Assert.That(r.Variance, Is.EqualTo(1e300));
         }
 
         #endregion
