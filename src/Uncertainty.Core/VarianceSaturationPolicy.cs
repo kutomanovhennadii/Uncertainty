@@ -99,7 +99,27 @@ namespace Uncertainty.Core
         /// </remarks>
         internal static double SaturateVariance(double mean, double variance)
         {
-            double relLimit = mean * mean * MaxRelativeVarianceFactor;
+            // Compute a scale-aware relative limit in a way that avoids producing Infinity due to overflow.
+            double absMean = Math.Abs(mean);
+            double relLimit;
+
+            if (double.IsFinite(absMean))
+            {
+                // Try to compute mean^2 * MaxRelativeVarianceFactor, but guard against overflow.
+                double meanSq = absMean * absMean; // may produce Infinity
+                relLimit = meanSq * MaxRelativeVarianceFactor;
+
+                if (!double.IsFinite(relLimit) || relLimit <= 0.0)
+                {
+                    // Fall back to absolute max when the computed relative limit is not usable.
+                    relLimit = AbsoluteVarianceMax;
+                }
+            }
+            else
+            {
+                relLimit = AbsoluteVarianceMax;
+            }
+
             double ceiling = Math.Max(relLimit, AbsoluteVarianceMax);
 
             if (!double.IsFinite(variance) || variance > ceiling)
