@@ -8,6 +8,9 @@ namespace Uncertainty.Core.Tests
     {
         #region // ---------- FromMeanVar Tests ----------
 
+        /// <summary>
+        /// Verifies that FromMeanVar returns expected mean and variance for valid inputs.
+        /// </summary>
         [Test]
         public void FromMeanVar_ValidInputs_ReturnsExpectedUDouble()
         {
@@ -18,6 +21,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(x.StdDev, Is.EqualTo(2.0));
         }
 
+        /// <summary>
+        /// Ensures zero variance creates an exact (no-uncertainty) UDouble value.
+        /// </summary>
         [Test]
         public void FromMeanVar_ZeroVariance_CreatesExactValue()
         {
@@ -28,6 +34,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(x.StdDev, Is.EqualTo(0.0));
         }
 
+        /// <summary>
+        /// Verifies that passing a negative variance to FromMeanVar throws ArgumentOutOfRangeException.
+        /// </summary>
         [Test]
         public void FromMeanVar_NegativeVariance_Throws()
         {
@@ -37,6 +46,9 @@ namespace Uncertainty.Core.Tests
             });
         }
 
+        /// <summary>
+        /// Verifies that passing NaN as mean to FromMeanVar throws ArgumentException.
+        /// </summary>
         [Test]
         public void FromMeanVar_NaNMean_Throws()
         {
@@ -46,6 +58,9 @@ namespace Uncertainty.Core.Tests
             });
         }
 
+        /// <summary>
+        /// Verifies that passing an infinite mean to FromMeanVar throws ArgumentException.
+        /// </summary>
         [Test]
         public void FromMeanVar_InfiniteMean_Throws()
         {
@@ -55,6 +70,9 @@ namespace Uncertainty.Core.Tests
             });
         }
 
+        /// <summary>
+        /// Verifies that passing NaN as variance to FromMeanVar throws ArgumentException.
+        /// </summary>
         [Test]
         public void FromMeanVar_NaNVariance_Throws()
         {
@@ -64,6 +82,9 @@ namespace Uncertainty.Core.Tests
             });
         }
 
+        /// <summary>
+        /// Verifies that passing infinite variance to FromMeanVar throws ArgumentException.
+        /// </summary>
         [Test]
         public void FromMeanVar_InfiniteVariance_Throws()
         {
@@ -76,6 +97,9 @@ namespace Uncertainty.Core.Tests
 
         #region // ---------- FromMeanStd Tests ----------
 
+        /// <summary>
+        /// Verifies that FromMeanStd converts stdDev to variance and returns correct values for valid inputs.
+        /// </summary>
         [Test]
         public void FromMeanStd_ValidInputs_ReturnsUDouble()
         {
@@ -86,6 +110,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(x.StdDev, Is.EqualTo(2.0));
         }
 
+        /// <summary>
+        /// Ensures FromMeanStd with zero stdDev produces an exact value with zero variance.
+        /// </summary>
         [Test]
         public void FromMeanStd_ZeroStdDev_ReturnsExactNumber()
         {
@@ -97,6 +124,9 @@ namespace Uncertainty.Core.Tests
         }
 
 
+        /// <summary>
+        /// Verifies that negative standard deviation passed to FromMeanStd throws ArgumentOutOfRangeException.
+        /// </summary>
         [Test]
         public void FromMeanStd_NegativeStdDev_Throws()
         {
@@ -104,6 +134,9 @@ namespace Uncertainty.Core.Tests
                 UDouble.FromMeanStd(1.0, -0.1));
         }
 
+        /// <summary>
+        /// Verifies that passing NaN as mean to FromMeanStd throws ArgumentException.
+        /// </summary>
         [Test]
         public void FromMeanStd_NaNMean_Throws()
         {
@@ -111,6 +144,9 @@ namespace Uncertainty.Core.Tests
                 UDouble.FromMeanStd(double.NaN, 1.0));
         }
 
+        /// <summary>
+        /// Verifies that passing an infinite mean to FromMeanStd throws ArgumentException.
+        /// </summary>
         [Test]
         public void FromMeanStd_InfiniteMean_Throws()
         {
@@ -118,6 +154,9 @@ namespace Uncertainty.Core.Tests
                 UDouble.FromMeanStd(double.PositiveInfinity, 1.0));
         }
 
+        /// <summary>
+        /// Verifies that passing NaN as stdDev to FromMeanStd throws ArgumentException.
+        /// </summary>
         [Test]
         public void FromMeanStd_NaNStdDev_Throws()
         {
@@ -125,6 +164,9 @@ namespace Uncertainty.Core.Tests
                 UDouble.FromMeanStd(1.0, double.NaN));
         }
 
+        /// <summary>
+        /// Verifies that passing infinite stdDev to FromMeanStd throws ArgumentException.
+        /// </summary>
         [Test]
         public void FromMeanStd_InfiniteStdDev_Throws()
         {
@@ -135,6 +177,9 @@ namespace Uncertainty.Core.Tests
 
         #region // --- FromDouble ---
 
+        /// <summary>
+        /// Verifies that FromDouble returns a UDouble with the given mean and positive variance for a finite input.
+        /// </summary>
         [Test]
         public void FromDouble_FiniteValue_ReturnsMeanAndPositiveVariance()
         {
@@ -145,6 +190,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(x.StdDev, Is.GreaterThan(0.0));
         }
 
+        /// <summary>
+        /// Verifies that FromDouble(0.0) returns mean 0 and a non-negative finite variance.
+        /// </summary>
         [Test]
         public void FromDouble_Zero_ReturnsMeanZeroAndNonNegativeFiniteVariance()
         {
@@ -155,6 +203,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(double.IsFinite(x.Variance), Is.True);
         }
 
+        /// <summary>
+        /// Verifies that FromDouble throws ArgumentException when passed NaN.
+        /// </summary>
         [Test]
         public void FromDouble_NaN_Throws()
         {
@@ -162,6 +213,9 @@ namespace Uncertainty.Core.Tests
                 Throws.TypeOf<ArgumentException>());
         }
 
+        /// <summary>
+        /// Verifies that FromDouble throws ArgumentException when passed positive infinity.
+        /// </summary>
         [Test]
         public void FromDouble_PositiveInfinity_Throws()
         {
@@ -169,6 +223,9 @@ namespace Uncertainty.Core.Tests
                 Throws.TypeOf<ArgumentException>());
         }
 
+        /// <summary>
+        /// Verifies that FromDouble throws ArgumentException when passed negative infinity.
+        /// </summary>
         [Test]
         public void FromDouble_NegativeInfinity_Throws()
         {
@@ -176,6 +233,9 @@ namespace Uncertainty.Core.Tests
                 Throws.TypeOf<ArgumentException>());
         }
 
+        /// <summary>
+        /// Confirms that FromDouble computes variance as (0.5*ulp)^2 for a known value.
+        /// </summary>
         [Test]
         public void FromDouble_KnownValue_UsesHalfUlpSquaredVariance()
         {
@@ -191,6 +251,9 @@ namespace Uncertainty.Core.Tests
 
         #region // --- FromFloat ---
 
+        /// <summary>
+        /// Verifies FromFloat produces correct mean and positive variance for a finite input.
+        /// </summary>
         [Test]
         public void FromFloat_FiniteValue_ReturnsMeanAndPositiveVariance()
         {
@@ -201,6 +264,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(x.StdDev, Is.GreaterThan(0.0));
         }
 
+        /// <summary>
+        /// Verifies FromFloat(0.0f) returns mean 0 and non-negative finite variance.
+        /// </summary>
         [Test]
         public void FromFloat_Zero_ReturnsMeanZeroAndNonNegativeFiniteVariance()
         {
@@ -211,6 +277,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(double.IsFinite(x.Variance), Is.True);
         }
 
+        /// <summary>
+        /// Verifies FromFloat throws ArgumentException when passed NaN.
+        /// </summary>
         [Test]
         public void FromFloat_NaN_Throws()
         {
@@ -218,6 +287,9 @@ namespace Uncertainty.Core.Tests
                 Throws.TypeOf<ArgumentException>());
         }
 
+        /// <summary>
+        /// Verifies FromFloat throws ArgumentException when passed positive infinity.
+        /// </summary>
         [Test]
         public void FromFloat_PositiveInfinity_Throws()
         {
@@ -225,6 +297,9 @@ namespace Uncertainty.Core.Tests
                 Throws.TypeOf<ArgumentException>());
         }
 
+        /// <summary>
+        /// Verifies FromFloat throws ArgumentException when passed negative infinity.
+        /// </summary>
         [Test]
         public void FromFloat_NegativeInfinity_Throws()
         {
@@ -232,6 +307,9 @@ namespace Uncertainty.Core.Tests
                 Throws.TypeOf<ArgumentException>());
         }
 
+        /// <summary>
+        /// Confirms FromFloat computes variance as (0.5*ulp)^2 for a known float value.
+        /// </summary>
         [Test]
         public void FromFloat_KnownValue_UsesHalfUlpSquaredVariance()
         {
@@ -247,6 +325,9 @@ namespace Uncertainty.Core.Tests
 
         #region // --- Explicit conversions ---
 
+        /// <summary>
+        /// Ensures explicit conversion from double delegates to FromDouble factory.
+        /// </summary>
         [Test]
         public void ExplicitDoubleConversion_UsesFromDouble()
         {
@@ -257,6 +338,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(viaOperator, Is.EqualTo(viaFactory));
         }
 
+        /// <summary>
+        /// Ensures explicit conversion from float delegates to FromFloat factory.
+        /// </summary>
         [Test]
         public void ExplicitFloatConversion_UsesFromFloat()
         {
@@ -267,6 +351,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(viaOperator, Is.EqualTo(viaFactory));
         }
 
+        /// <summary>
+        /// Ensures explicit conversion from int delegates to FromDouble factory.
+        /// </summary>
         [Test]
         public void ExplicitIntConversion_UsesFromDouble()
         {
@@ -277,6 +364,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(viaOperator, Is.EqualTo(viaFactory));
         }
 
+        /// <summary>
+        /// Verifies explicit conversion from double throws when input is NaN.
+        /// </summary>
         [Test]
         public void ExplicitDoubleConversion_NaN_Throws()
         {
@@ -285,6 +375,9 @@ namespace Uncertainty.Core.Tests
                 Throws.TypeOf<ArgumentException>());
         }
 
+        /// <summary>
+        /// Verifies explicit conversion from float throws when input is infinite.
+        /// </summary>
         [Test]
         public void ExplicitFloatConversion_Infinity_Throws()
         {
@@ -296,6 +389,9 @@ namespace Uncertainty.Core.Tests
 
         #region // --- FromData(IEnumerable<UDouble>) ---
 
+        /// <summary>
+        /// Verifies FromData over UDouble with a single element returns the same mean and variance.
+        /// </summary>
         [Test]
         public void FromData_UDoubleSingleElement_ReturnsSameMeanAndVariance()
         {
@@ -307,6 +403,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(r.Variance, Is.EqualTo(2.0));
         }
 
+        /// <summary>
+        /// Verifies FromData combines statistical and instrumental variance correctly for multiple UDouble inputs.
+        /// </summary>
         [Test]
         public void FromData_UDoubleMultipleElements_ComputesStatAndInstrumentalVariance()
         {
@@ -324,6 +423,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(r.Variance, Is.EqualTo(2.0));
         }
 
+        /// <summary>
+        /// Verifies FromData throws ArgumentException when given an empty UDouble sequence.
+        /// </summary>
         [Test]
         public void FromData_UDoubleEmpty_Throws()
         {
@@ -332,6 +434,9 @@ namespace Uncertainty.Core.Tests
                 Throws.TypeOf<ArgumentException>());
         }
 
+        /// <summary>
+        /// Verifies FromData throws ArgumentNullException when passed null UDouble sequence.
+        /// </summary>
         [Test]
         public void FromData_UDoubleNull_Throws()
         {
@@ -343,6 +448,9 @@ namespace Uncertainty.Core.Tests
 
         #region // --- FromData(IEnumerable<T>) where T : INumber<T> ---
 
+        /// <summary>
+        /// Verifies FromData over integer sequence computes mean and non-negative variance.
+        /// </summary>
         [Test]
         public void FromData_NumericInts_ComputesMeanAndNonNegativeVariance()
         {
@@ -353,6 +461,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(r.Variance, Is.GreaterThanOrEqualTo(0.0));
         }
 
+        /// <summary>
+        /// Verifies FromData over float sequence computes mean and positive variance (float rounding behavior).
+        /// </summary>
         [Test]
         public void FromData_NumericFloats_UsesFloatRounding()
         {
@@ -363,6 +474,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(r.Variance, Is.GreaterThan(0.0));
         }
 
+        /// <summary>
+        /// Verifies FromData over double sequence computes mean and positive variance (double rounding behavior).
+        /// </summary>
         [Test]
         public void FromData_NumericDoubles_UsesDoubleRounding()
         {
@@ -373,6 +487,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(r.Variance, Is.GreaterThan(0.0));
         }
 
+        /// <summary>
+        /// Verifies FromData with a single numeric element returns the mean and instrumental variance only.
+        /// </summary>
         [Test]
         public void FromData_NumericSingleElement_ReturnsInstrumentalVarianceOnly()
         {
@@ -383,6 +500,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(r.Variance, Is.GreaterThanOrEqualTo(0.0));
         }
 
+        /// <summary>
+        /// Verifies FromData throws ArgumentException for an empty numeric sequence.
+        /// </summary>
         [Test]
         public void FromData_NumericEmpty_Throws()
         {
@@ -391,6 +511,9 @@ namespace Uncertainty.Core.Tests
                 Throws.TypeOf<ArgumentException>());
         }
 
+        /// <summary>
+        /// Verifies FromData throws ArgumentNullException when passed a null numeric sequence.
+        /// </summary>
         [Test]
         public void FromData_NumericNull_Throws()
         {
@@ -402,6 +525,9 @@ namespace Uncertainty.Core.Tests
 
         #region // --- Statistical (Welford) and Formatting Tests ---
 
+        /// <summary>
+        /// Verifies FromDouble handles subnormal values and uses half-ulp squared variance.
+        /// </summary>
         [Test]
         public void FromDouble_Subnormal_UsesHalfUlpSquaredVariance()
         {
@@ -411,6 +537,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(x.Variance, Is.EqualTo(expected));
         }
 
+        /// <summary>
+        /// Verifies FromFloat handles subnormal values and uses half-ulp squared variance.
+        /// </summary>
         [Test]
         public void FromFloat_Subnormal_UsesHalfUlpSquaredVariance()
         {
@@ -420,6 +549,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(x.Variance, Is.EqualTo(expected));
         }
 
+        /// <summary>
+        /// Verifies Welford-based FromData remains stable for large numeric values.
+        /// </summary>
         [Test]
         public void FromData_NumericLargeValues_StableWelfordComputation()
         {
@@ -452,6 +584,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(r.Variance, Is.EqualTo(expectedVariance).Within(Math.Max(1e-12, Math.Abs(expectedVariance) * 1e-12)));
         }
 
+        /// <summary>
+        /// Verifies Welford-based FromData remains stable for large UDouble inputs.
+        /// </summary>
         [Test]
         public void FromData_UDoubleLargeValues_StableWelfordComputation()
         {
@@ -485,6 +620,9 @@ namespace Uncertainty.Core.Tests
 
 
 
+        /// <summary>
+        /// Confirms the public `UDouble.Zero` represents mean 0 and exact zero variance.
+        /// </summary>
         [Test]
         public void Zero_IsZeroAndExact()
         {
