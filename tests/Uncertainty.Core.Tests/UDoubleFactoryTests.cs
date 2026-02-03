@@ -578,7 +578,13 @@ namespace Uncertainty.Core.Tests
             decimal varianceStat = sigma2Stat / n;
 
             double expectedMean = (double)meanD;
-            double expectedVariance = (double)varianceStat;
+            // Include instrumental variance induced by converting the numeric samples to UDouble via IEEE-754 rounding.
+            double sumInst = 0.0;
+            for (int i = 0; i < n; i++)
+                sumInst += UDouble.FromDouble(data[i]).Variance;
+            double avgInst = sumInst / n;
+
+            double expectedVariance = (double)varianceStat + avgInst;
 
             Assert.That(r.Mean, Is.EqualTo(expectedMean).Within(1e-6));
             Assert.That(r.Variance, Is.EqualTo(expectedVariance).Within(Math.Max(1e-12, Math.Abs(expectedVariance) * 1e-12)));

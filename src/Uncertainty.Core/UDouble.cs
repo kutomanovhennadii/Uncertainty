@@ -277,26 +277,39 @@ namespace Uncertainty.Core
         {
             ArgumentNullException.ThrowIfNull(data);
 
-            double mean = 0.0;
-            double M2 = 0.0;
+            // Collect into a list to allow a high-precision two-pass computation using decimal.
+            var means = new List<double>();
             double sumVarianceInst = 0.0;
-            int n = 0;
 
             foreach (var s in data)
             {
-                n++;
-                double delta = s.Mean - mean;
-                mean += delta / n;
-                double delta2 = s.Mean - mean;
-                M2 += delta * delta2;
-
+                means.Add(s.Mean);
                 sumVarianceInst += s.Variance;
             }
 
+            int n = means.Count;
             if (n == 0) throw new ArgumentException("Data must contain at least one element.", nameof(data));
 
-            double sigma2Stat = n > 1 ? M2 / (n - 1) : 0.0;
-            double varianceStat = sigma2Stat / n;
+            // Compute mean using decimal for higher precision on large magnitudes.
+            decimal meanD = 0m;
+            foreach (var m in means)
+                meanD += (decimal)m;
+            meanD /= n;
+            double mean = (double)meanD;
+
+            // Compute sample variance of means (sigma^2_stat) using decimal arithmetic, then convert.
+            decimal sumSq = 0m;
+            if (n > 1)
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    decimal delta = (decimal)means[i] - meanD;
+                    sumSq += delta * delta;
+                }
+            }
+
+            decimal sigma2StatD = n > 1 ? sumSq / (n - 1) : 0m;
+            double varianceStat = (double)(sigma2StatD / n);
             double varianceInst = sumVarianceInst / n;
 
             return FromMeanVar(mean, varianceStat + varianceInst);
@@ -331,26 +344,39 @@ namespace Uncertainty.Core
         {
             ArgumentNullException.ThrowIfNull(data);
 
-            double mean = 0.0;
-            double M2 = 0.0;
+            // Collect converted samples to allow a two-pass high-precision aggregation.
+            var means = new List<double>();
             double sumVarianceInst = 0.0;
-            int n = 0;
 
             foreach (var item in data)
             {
                 var s = FromNumber(item);
-                n++;
-                double delta = s.Mean - mean;
-                mean += delta / n;
-                double delta2 = s.Mean - mean;
-                M2 += delta * delta2;
+                means.Add(s.Mean);
                 sumVarianceInst += s.Variance;
             }
 
+            int n = means.Count;
             if (n == 0) throw new ArgumentException("Data must contain at least one element.", nameof(data));
 
-            double sigma2Stat = n > 1 ? M2 / (n - 1) : 0.0;
-            double varianceStat = sigma2Stat / n;
+            // Compute mean using decimal for higher precision on large magnitudes.
+            decimal meanD = 0m;
+            for (int i = 0; i < n; i++)
+                meanD += (decimal)means[i];
+            meanD /= n;
+            double mean = (double)meanD;
+            // Compute sample variance of means (sigma^2_stat) using decimal arithmetic, then convert.
+            decimal sumSq = 0m;
+            if (n > 1)
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    decimal delta = (decimal)means[i] - meanD;
+                    sumSq += delta * delta;
+                }
+            }
+
+            decimal sigma2StatD = n > 1 ? sumSq / (n - 1) : 0m;
+            double varianceStat = (double)(sigma2StatD / n);
             double varianceInst = sumVarianceInst / n;
 
             return FromMeanVar(mean, varianceStat + varianceInst);
@@ -529,8 +555,28 @@ namespace Uncertainty.Core
         /// </remarks>
         public static UDouble Divide(UDouble a, UDouble b)
         {
+            // Exact zero denominator is always illegal according to contract.
+            if (b.Mean == 0.0)
+                throw new DivideByZeroException("Denominator mean is zero.");
+
+            // If denominator is "small" according to the tolerance, consult policy.
             if (Math.Abs(b.Mean) <= DivisionTolerance)
-                throw new DivideByZeroException("Denominator mean is too close to zero.");
+            {
+                switch (Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior)
+                {
+                    case Uncertainty.Core.Policies.DivisionBehavior.ThrowOnSmallDenominator:
+                        throw new DivideByZeroException("Denominator mean is too close to zero.");
+
+                    case Uncertainty.Core.Policies.DivisionBehavior.SaturateVariance:
+                        // fall through to compute division but ensure variance is saturated (no exception)
+
+                        break;
+
+                    case Uncertainty.Core.Policies.DivisionBehavior.ReturnInfinityMean:
+                        // Not implemented as a special case yet — treat as SaturateVariance for now.
+                        break;
+                }
+            }
 
             double mean = a.Mean / b.Mean;
 

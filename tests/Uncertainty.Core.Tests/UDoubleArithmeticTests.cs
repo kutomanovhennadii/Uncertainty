@@ -28,14 +28,17 @@ namespace Uncertainty.Core.Tests
             var b = UDouble.FromMeanVar(1e-308, 0.0);
 
             double prev = UDouble.DivisionTolerance;
+            var prevPolicy = Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior;
             try
             {
                 UDouble.DivisionTolerance = 1e-307;
+                Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior = Uncertainty.Core.Policies.DivisionBehavior.ThrowOnSmallDenominator;
                 Assert.That(() => UDouble.Divide(a, b), Throws.TypeOf<DivideByZeroException>());
             }
             finally
             {
                 UDouble.DivisionTolerance = prev;
+                Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior = prevPolicy;
             }
         }
 
@@ -51,6 +54,35 @@ namespace Uncertainty.Core.Tests
             var r = UDouble.Divide(a, b);
 
             Assert.That(r.Variance, Is.EqualTo(1e300));
+        }
+
+        /// <summary>
+        /// Verifies that when policy is set to SaturateVariance and denominator is "small" (within DivisionTolerance),
+        /// division returns a finite UDouble with a saturated variance instead of throwing.
+        /// </summary>
+        [Test]
+        public void Divide_TinyDenominator_WithSaturatePolicy_ReturnsSaturatedVariance()
+        {
+            var a = UDouble.FromMeanVar(1.0, 1.0);
+            var b = UDouble.FromMeanVar(1e-308, 0.0);
+
+            double prevTol = UDouble.DivisionTolerance;
+            var prevPolicy = Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior;
+            try
+            {
+                UDouble.DivisionTolerance = 1e-307;
+                Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior = Uncertainty.Core.Policies.DivisionBehavior.SaturateVariance;
+
+                var r = UDouble.Divide(a, b);
+
+                Assert.That(double.IsFinite(r.Variance), Is.True);
+                Assert.That(r.Variance, Is.LessThanOrEqualTo(VarianceSaturationPolicy.AbsoluteVarianceMax));
+            }
+            finally
+            {
+                UDouble.DivisionTolerance = prevTol;
+                Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior = prevPolicy;
+            }
         }
 
         /// <summary>
