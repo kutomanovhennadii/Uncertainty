@@ -400,7 +400,7 @@ namespace Uncertainty.Core.Tests
         }
         #endregion
 
-        #region // --- New tests: Welford, Subnormals, ToString, Zero ---
+        #region // --- Statistical (Welford) and Formatting Tests ---
 
         [Test]
         public void FromDouble_Subnormal_UsesHalfUlpSquaredVariance()
