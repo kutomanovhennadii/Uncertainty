@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using System.Globalization;
 
@@ -439,6 +440,13 @@ namespace Uncertainty.Core
         #endregion
 
         #region Operators
+        [Obsolete("Use Uncertainty.Core.Policies.UncertaintyPolicies.SetDivisionTolerance or read Uncertainty.Core.Policies.UncertaintyPolicies.DivisionTolerance", false)]
+        public static double DivisionTolerance
+        {
+            get => Uncertainty.Core.Policies.UncertaintyPolicies.DivisionTolerance;
+            set => Uncertainty.Core.Policies.UncertaintyPolicies.SetDivisionTolerance(value);
+        }
+
         /// <summary>
         /// Adds two uncertain values using linear error propagation.
         /// </summary>
@@ -455,11 +463,8 @@ namespace Uncertainty.Core
         /// </remarks>
         /// <summary>
         /// Tolerance used to treat small denominators as zero in division operations.
-        /// Default is 0.0, which preserves exact behavior (<c>b.Mean == 0.0</c>).
-        /// Set to a positive value to consider values with <c>|mean| &lt;= DivisionTolerance</c> as zero.
+        /// This property is obsolete and forwards to <c>Uncertainty.Core.Policies.UncertaintyPolicies.DivisionTolerance</c>.
         /// </summary>
-        public static double DivisionTolerance { get; set; }
-
         public static UDouble Add(UDouble a, UDouble b)
         {
             double mean = a.Mean + b.Mean;
@@ -559,23 +564,10 @@ namespace Uncertainty.Core
             if (b.Mean == 0.0)
                 throw new DivideByZeroException("Denominator mean is zero.");
 
-            // If denominator is "small" according to the tolerance, consult policy.
-            if (Math.Abs(b.Mean) <= DivisionTolerance)
+            // If denominator is "small" according to the tolerance, delegate to configured strategy.
+            if (Math.Abs(b.Mean) <= Uncertainty.Core.Policies.UncertaintyPolicies.DivisionTolerance)
             {
-                switch (Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior)
-                {
-                    case Uncertainty.Core.Policies.DivisionBehavior.ThrowOnSmallDenominator:
-                        throw new DivideByZeroException("Denominator mean is too close to zero.");
-
-                    case Uncertainty.Core.Policies.DivisionBehavior.SaturateVariance:
-                        // fall through to compute division but ensure variance is saturated (no exception)
-
-                        break;
-
-                    case Uncertainty.Core.Policies.DivisionBehavior.ReturnInfinityMean:
-                        // Not implemented as a special case yet — treat as SaturateVariance for now.
-                        break;
-                }
+                return Uncertainty.Core.Policies.UncertaintyPolicies.DivisionStrategy.HandleSmallDenominator(a, b);
             }
 
             double mean = a.Mean / b.Mean;

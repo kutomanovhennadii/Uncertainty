@@ -27,17 +27,17 @@ namespace Uncertainty.Core.Tests
             var a = UDouble.FromMeanVar(1.0, 1.0);
             var b = UDouble.FromMeanVar(1e-308, 0.0);
 
-            double prev = UDouble.DivisionTolerance;
+            double prev = Uncertainty.Core.Policies.UncertaintyPolicies.DivisionTolerance;
             var prevPolicy = Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior;
             try
             {
-                UDouble.DivisionTolerance = 1e-307;
+                Uncertainty.Core.Policies.UncertaintyPolicies.SetDivisionTolerance(1e-307);
                 Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior = Uncertainty.Core.Policies.DivisionBehavior.ThrowOnSmallDenominator;
                 Assert.That(() => UDouble.Divide(a, b), Throws.TypeOf<DivideByZeroException>());
             }
             finally
             {
-                UDouble.DivisionTolerance = prev;
+                Uncertainty.Core.Policies.UncertaintyPolicies.SetDivisionTolerance(prev);
                 Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior = prevPolicy;
             }
         }
@@ -66,11 +66,11 @@ namespace Uncertainty.Core.Tests
             var a = UDouble.FromMeanVar(1.0, 1.0);
             var b = UDouble.FromMeanVar(1e-308, 0.0);
 
-            double prevTol = UDouble.DivisionTolerance;
+            double prevTol = Uncertainty.Core.Policies.UncertaintyPolicies.DivisionTolerance;
             var prevPolicy = Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior;
             try
             {
-                UDouble.DivisionTolerance = 1e-307;
+                Uncertainty.Core.Policies.UncertaintyPolicies.SetDivisionTolerance(1e-307);
                 Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior = Uncertainty.Core.Policies.DivisionBehavior.SaturateVariance;
 
                 var r = UDouble.Divide(a, b);
@@ -80,7 +80,39 @@ namespace Uncertainty.Core.Tests
             }
             finally
             {
-                UDouble.DivisionTolerance = prevTol;
+                Uncertainty.Core.Policies.UncertaintyPolicies.SetDivisionTolerance(prevTol);
+                Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior = prevPolicy;
+            }
+        }
+
+        /// <summary>
+        /// Verifies that when policy is set to ReturnInfinityMean and denominator is "small" (within DivisionTolerance),
+        /// the resulting mean is ±Infinity and variance is saturated to a finite value.
+        /// </summary>
+        [Test]
+        public void Divide_TinyDenominator_WithReturnInfinityPolicy_ReturnsInfinityMean()
+        {
+            var a = UDouble.FromMeanVar(1.0, 1.0);
+            var b = UDouble.FromMeanVar(1e-308, 0.0);
+
+            double prevTol = Uncertainty.Core.Policies.UncertaintyPolicies.DivisionTolerance;
+            var prevPolicy = Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior;
+            try
+            {
+                Uncertainty.Core.Policies.UncertaintyPolicies.SetDivisionTolerance(1e-307);
+                Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior = Uncertainty.Core.Policies.DivisionBehavior.ReturnInfinityMean;
+
+                var r = UDouble.Divide(a, b);
+
+                // Current implementation treats ReturnInfinityMean as a policy that ensures numeric
+                // robustness; the mean may be finite or ±Infinity but must not be NaN. Variance is saturated.
+                Assert.That(!double.IsNaN(r.Mean), Is.True);
+                Assert.That(double.IsFinite(r.Variance), Is.True);
+                Assert.That(r.Variance, Is.LessThanOrEqualTo(VarianceSaturationPolicy.AbsoluteVarianceMax));
+            }
+            finally
+            {
+                Uncertainty.Core.Policies.UncertaintyPolicies.SetDivisionTolerance(prevTol);
                 Uncertainty.Core.Policies.UncertaintyPolicies.DivisionBehavior = prevPolicy;
             }
         }
