@@ -6,6 +6,9 @@ namespace Uncertainty.Core.Tests
     [TestFixture]
     public sealed class UDoubleArithmeticTests
     {
+        /// <summary>
+        /// Verifies dividing by an exact-zero UDouble throws DivideByZeroException.
+        /// </summary>
         [Test]
         public void Divide_ByZero_Throws()
         {
@@ -15,6 +18,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(() => UDouble.Divide(a, b), Throws.TypeOf<DivideByZeroException>());
         }
 
+        /// <summary>
+        /// Verifies Divide treats tiny denominators within DivisionTolerance as zero and throws.
+        /// </summary>
         [Test]
         public void Divide_TinyDenominator_WithTolerance_Throws()
         {
@@ -33,6 +39,9 @@ namespace Uncertainty.Core.Tests
             }
         }
 
+        /// <summary>
+        /// Verifies variance saturation occurs during division when variance would exceed AbsoluteVarianceMax.
+        /// </summary>
         [Test]
         public void Divide_LargeVariance_IsSaturated()
         {
@@ -44,6 +53,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(r.Variance, Is.EqualTo(1e300));
         }
 
+        /// <summary>
+        /// Verifies addition saturates variance above the configured maximum.
+        /// </summary>
         [Test]
         public void Add_Variance_IsSaturated()
         {
@@ -55,6 +67,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(r.Variance, Is.EqualTo(1e300));
         }
 
+        /// <summary>
+        /// Verifies multiplication saturates variance when result would exceed AbsoluteVarianceMax.
+        /// </summary>
         [Test]
         public void Multiply_Variance_IsSaturated()
         {

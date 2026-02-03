@@ -6,6 +6,9 @@ namespace Uncertainty.Core.Tests
     [TestFixture]
     public sealed class UDoubleFormattingTests
     {
+        /// <summary>
+        /// Verifies default and formatted ToString produce expected representations (invariant culture).
+        /// </summary>
         [Test]
         public void ToString_DefaultAndFormat_ReturnsExpected()
         {
@@ -18,6 +21,9 @@ namespace Uncertainty.Core.Tests
             Assert.That(f2, Is.EqualTo("1.23 ± 0.50"));
         }
 
+        /// <summary>
+        /// Verifies ToString uses the current thread culture when no provider is specified.
+        /// </summary>
         [Test]
         public void ToString_UsesCurrentCulture()
         {

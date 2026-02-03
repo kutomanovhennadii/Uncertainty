@@ -5,6 +5,9 @@ namespace Uncertainty.Core.Tests
     [TestFixture]
     public sealed class VarianceSaturationPolicyTests
     {
+        /// <summary>
+        /// Validates the saturation matrix: different mean/variance combinations yield expected ceiling behavior.
+        /// </summary>
         [Test]
         public void SaturateVariance_MatrixBehavesAsSpecified()
         {
