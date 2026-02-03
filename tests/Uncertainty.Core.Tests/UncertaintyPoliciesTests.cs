@@ -5,8 +5,14 @@ using Uncertainty.Core.Policies;
 namespace Uncertainty.Core.Tests
 {
     [TestFixture]
+    /// <summary>
+    /// Validates policy defaults, mappings, and tolerance guardrails.
+    /// </summary>
     public sealed class UncertaintyPoliciesTests
     {
+        /// <summary>
+        /// Defaults should match ThrowOnSmallDenominator with a throwing strategy.
+        /// </summary>
         [Test]
         public void Defaults_AreExpected()
         {
@@ -19,6 +25,9 @@ namespace Uncertainty.Core.Tests
         [TestCase(DivisionBehavior.ThrowOnSmallDenominator, "ThrowingDivisionStrategy")]
         [TestCase(DivisionBehavior.SaturateVariance, "SaturatingDivisionStrategy")]
         [TestCase(DivisionBehavior.ReturnInfinityMean, "ReturnInfinityDivisionStrategy")]
+        /// <summary>
+        /// Each enum value must map to its corresponding built-in strategy.
+        /// </summary>
         public void DivisionBehavior_MapsToExpectedStrategy(DivisionBehavior behavior, string expectedTypeName)
         {
             var prev = UncertaintyPolicies.DivisionBehavior;
@@ -36,6 +45,9 @@ namespace Uncertainty.Core.Tests
             }
         }
 
+        /// <summary>
+        /// Setting a valid tolerance should update the stored value.
+        /// </summary>
         [Test]
         public void SetDivisionTolerance_AllowsValidValue()
         {
@@ -51,6 +63,9 @@ namespace Uncertainty.Core.Tests
             }
         }
 
+        /// <summary>
+        /// Invalid tolerance inputs must trigger guard exceptions.
+        /// </summary>
         [Test]
         public void SetDivisionTolerance_Invalid_Throws()
         {
